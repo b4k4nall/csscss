@@ -7,6 +7,7 @@ module Csscss
     def report(options = {})
       verbose      = options.fetch(:verbose, false)
       should_color = options.fetch(:color, true)
+      duplicates = options.fetch(:duplicates, [])
 
       io = StringIO.new
       @redundancies.each do |selector_groups, declarations|
@@ -17,6 +18,10 @@ module Csscss
         if verbose
           declarations.each {|dec| io.puts("  - #{maybe_color(dec, :yellow, should_color)}") }
         end
+      end
+
+      duplicates.each do |duplicate|
+        io.puts "[#{maybe_color(duplicate[0], :red, should_color)} AND #{maybe_color(duplicate[1], :red, should_color)}] are identical selectors that share #{maybe_color(duplicate[2].size, :red, should_color)} attributes"
       end
 
       io.rewind
