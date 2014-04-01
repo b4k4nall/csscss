@@ -286,6 +286,41 @@ module Csscss
       })
     end
 
+    it "correctly finds duplicates when duplicates flag is given" do
+      css = %$
+        h1, h2 { display: none; position: relative; outline:none}
+        .foo { display: none; width: 1px }
+        .bar { position: relative; width: 1px; outline: none }
+        .baz { display: none }
+        .alpha { width: 2px }
+        .beta { width: 2px }
+      $
+      analyzer = RedundancyAnalyzer.new(css)
+
+      analyzer.redundancies(duplicates:true).must_equal({
+        [sel(".bar"), sel("h1, h2")] => [dec("outline", "none"), dec("position", "relative")],
+        [sel(".bar"), sel(".foo")] => [dec("width", "1px")],
+        [sel(".baz"), sel(".foo"), sel("h1, h2")] => [dec("display", "none")],
+        [sel(".alpha"), sel(".beta")] => [dec("width", "2px")]
+      })
+
+      analyzer.duplicates.must_equal([
+        [sel(".beta"), sel(".alpha"), [dec("width", "2px")]]
+      ])
+    end
+
+    it "correctly finds no duplicates when the flag is given if there are none" do
+      css = %$
+        h1, h2 { display: none; position: relative; outline:none}
+        .foo { display: none; width: 1px }
+        .bar { position: relative; width: 1px; outline: none }
+        .baz { display: none }
+      $
+      analyzer = RedundancyAnalyzer.new(css)
+      analyzer.redundancies(duplicates:true)
+      analyzer.duplicates.must_be_empty
+    end
+
 
     # TODO: someday
     # it "reports duplication within the same selector" do

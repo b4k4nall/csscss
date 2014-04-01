@@ -30,6 +30,18 @@ EXPECTED
      reporter.report(verbose:true, color:false).must_equal expected
     end
 
+    it "prints the regular results and the specific duplicates" do
+      reporter = Reporter.new({
+        [sel(".foo"), sel(".bar")] => [dec("width", "1px"), dec("border", "black")]
+      })
+
+      expected =<<-EXPECTED
+{.foo} AND {.bar} share 2 rules
+[foo AND bar] are identical selectors that share 2 attributes
+      EXPECTED
+      reporter.report(color:false, duplicates: [['foo', 'bar', %w('attribute', 'other_attribute')]]).must_equal expected
+    end
+
     it "prints a new line if there is nothing" do
       reporter = Reporter.new({})
       reporter.report().must_equal ""

@@ -10,6 +10,7 @@ module Csscss
       ignored_properties = opts[:ignored_properties] || []
       ignored_selectors  = opts[:ignored_selectors] || []
       match_shorthand    = opts.fetch(:match_shorthand, true)
+      find_duplicates    = opts.fetch(:duplicates, false)
 
       rule_sets = Parser::Css.parse(@raw_css)
       matches = {}
@@ -54,6 +55,8 @@ module Csscss
           matches[dec].uniq!
         end
       end
+
+      @duplicates = find_all_duplicates(matches) if find_duplicates && matches
 
       inverted_matches = {}
       matches.each do |declaration, selector_groups|
@@ -119,7 +122,33 @@ module Csscss
       end
     end
 
+    def duplicates(opts = {})
+      redundancies(opts) unless @duplicates
+      @duplicates
+    end
+
     private
+    def find_all_duplicates(matches)
+      # get the full selectors key declaration value hash
+      inverted = {}
+      duplicates = []
+      matches.each do |declaration, selector_group|
+        selector_group.each do |selector|
+          inverted[selector] ||= [] # at most empty
+          inverted[selector] << declaration unless inverted[selector].include?(declaration) # no duplicate values
+        end
+      end
+      inverted_copy = inverted
+      inverted.each do |key, value|
+        #remove the key value from inverted copy
+        inverted_copy.delete(key)
+        #if it still contains the value, log as duplicate
+        copy = inverted_copy.key(value)
+        duplicates << [copy, key, value] if copy
+      end
+      duplicates
+    end
+
     def shorthand_parser(property)
       case property
       when "background"   then Parser::Background
