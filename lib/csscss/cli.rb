@@ -10,6 +10,7 @@ module Csscss
       @ignored_selectors  = []
       @match_shorthand    = true
       @ignore_sass_mixins = false
+      @subsets       = false
     end
 
     def run
@@ -37,17 +38,19 @@ module Csscss
       end.join("\n")
 
       unless all_contents.strip.empty?
-        redundancies = RedundancyAnalyzer.new(all_contents).redundancies(
+        analyzer = RedundancyAnalyzer.new(all_contents)
+        redundancies = analyzer.redundancies(
           minimum:            @minimum,
           ignored_properties: @ignored_properties,
           ignored_selectors:  @ignored_selectors,
-          match_shorthand:    @match_shorthand
+          match_shorthand:    @match_shorthand,
+          subsets:            @subsets
         )
 
         if @json
           puts JSONReporter.new(redundancies).report
         else
-          report = Reporter.new(redundancies).report(verbose:@verbose, color:@color)
+          report = Reporter.new(redundancies).report(verbose:@verbose, color:@color, subsets:analyzer.subsets)
           puts report unless report.empty?
         end
       end
@@ -70,6 +73,10 @@ module Csscss
 
         opts.on("-v", "--[no-]verbose", "Display each rule") do |v|
           @verbose = v
+        end
+
+        opts.on("-s", "--[no-]subsets", "Display all selector subsets") do |s|
+          @subsets = s
         end
 
         opts.on("--[no-]color", "Colorize output", "(default is #{@color})") do |c|

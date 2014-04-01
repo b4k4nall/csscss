@@ -7,6 +7,8 @@ module Csscss
     def report(options = {})
       verbose      = options.fetch(:verbose, false)
       should_color = options.fetch(:color, true)
+      subsets = options.fetch(:subsets, [])
+
 
       io = StringIO.new
       @redundancies.each do |selector_groups, declarations|
@@ -17,6 +19,10 @@ module Csscss
         if verbose
           declarations.each {|dec| io.puts("  - #{maybe_color(dec, :yellow, should_color)}") }
         end
+      end
+
+      subsets.each do |subset|
+        io.puts "[#{maybe_color(subset[0], :red, should_color)}(#{maybe_color(subset[2].size, :red, should_color)} attributes) is a subset of the following classes: #{maybe_color(subset[1], :red, should_color)}]"
       end
 
       io.rewind

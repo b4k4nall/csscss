@@ -9,7 +9,10 @@ module Csscss
       minimum            = opts[:minimum]
       ignored_properties = opts[:ignored_properties] || []
       ignored_selectors  = opts[:ignored_selectors] || []
-      match_shorthand    = opts.fetch(:match_shorthand, true)
+      match_shorthand    = opts.fetch(:match_shorthand, true),
+      find_subsets   = opts.fetch(:subsets, false)
+      find_duplicates   = opts.fetch(:duplicates, false)
+
 
       rule_sets = Parser::Css.parse(@raw_css)
       matches = {}
@@ -54,6 +57,8 @@ module Csscss
           matches[dec].uniq!
         end
       end
+
+      @duplicates, @subsets = find_all_duplicates_and_subsets(matches, find_subsets) if (find_duplicates || find_subsets) && matches
 
       inverted_matches = {}
       matches.each do |declaration, selector_groups|
@@ -119,7 +124,47 @@ module Csscss
       end
     end
 
+    def duplicates(opts = {})
+      redundancies(opts) unless @duplicates
+      @duplicates
+    end
+
+    def subsets(opts = {})
+      redundancies(opts) unless @subsets
+      @subsets
+    end
+
     private
+    def find_all_duplicates_and_subsets(matches, find_subsets)
+      # get the full selectors key declaration value hash
+      inverted = {}
+      duplicates = []
+      subsets = []
+      matches.each do |declaration, selector_group|
+        selector_group.each do |selector|
+          inverted[selector] ||= [] # at most empty
+          inverted[selector] << declaration unless inverted[selector].include?(declaration) # no duplicate values
+        end
+      end
+      inverted_copy = inverted
+      inverted.each do |key, value|
+        # remove the key and value from inverted copy
+        inverted_copy.delete(key)
+        # if it still contains the value, log as duplicate
+        copy = inverted_copy.key(value)
+        if copy
+          duplicates << [copy, key, value] # if its a full copy it's a duplicate
+        elsif find_subsets # otherwise it might be a subset
+          keys = []
+          inverted_copy.each do |inverted_key, inverted_value|
+            keys << inverted_key if (value-inverted_value).empty? # value is a subset of inverted value
+          end
+          subsets << [key, keys.join(','), value] if keys.size > 0
+        end
+      end
+      [duplicates, subsets]
+    end
+
     def shorthand_parser(property)
       case property
       when "background"   then Parser::Background
