@@ -11,6 +11,7 @@ module Csscss
       @match_shorthand    = true
       @ignore_sass_mixins = false
       @find_duplicates    = false
+      @subsets       = false
     end
 
     def run
@@ -44,13 +45,14 @@ module Csscss
           ignored_properties: @ignored_properties,
           ignored_selectors:  @ignored_selectors,
           match_shorthand:    @match_shorthand,
-          duplicates:         @find_duplicates
+          duplicates:         @find_duplicates,
+          subsets:            @subsets
         )
 
         if @json
           puts JSONReporter.new(redundancies).report
         else
-          report = Reporter.new(redundancies).report(verbose:@verbose, color:@color, duplicates: analyzer.duplicates)
+          report = Reporter.new(redundancies).report(verbose:@verbose, color:@color, duplicates: analyzer.duplicates, subsets:analyzer.subsets)
           puts report unless report.empty?
         end
       end
@@ -77,6 +79,11 @@ module Csscss
 
         opts.on("-d", "--[no-]duplicates", "Display Identical rules") do |d|
           @find_duplicates = d
+        end
+
+        opts.on("-s", "--[no-]subsets", "Display all selector subsets") do |s|
+          @subsets = s
+
         end
 
         opts.on("--[no-]color", "Colorize output", "(default is #{@color})") do |c|

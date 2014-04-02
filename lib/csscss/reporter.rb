@@ -8,6 +8,7 @@ module Csscss
       verbose      = options.fetch(:verbose, false)
       should_color = options.fetch(:color, true)
       duplicates = options.fetch(:duplicates, [])
+      subsets = options.fetch(:subsets, [])
 
       io = StringIO.new
       @redundancies.each do |selector_groups, declarations|
@@ -22,6 +23,10 @@ module Csscss
 
       duplicates.each do |duplicate|
         io.puts "[#{maybe_color(duplicate[0], :red, should_color)} AND #{maybe_color(duplicate[1], :red, should_color)}] are identical selectors that share #{maybe_color(duplicate[2].size, :red, should_color)} attributes"
+      end
+
+      subsets.each do |subset|
+        io.puts "[#{maybe_color(subset[0], :red, should_color)}(#{maybe_color(subset[2].size, :red, should_color)} attributes) is a subset of the following classes: #{maybe_color(subset[1].join(','), :red, should_color)}]"
       end
 
       io.rewind
