@@ -9,7 +9,7 @@ module Csscss
       minimum            = opts[:minimum]
       ignored_properties = opts[:ignored_properties] || []
       ignored_selectors  = opts[:ignored_selectors] || []
-      match_shorthand    = opts.fetch(:match_shorthand, true),
+      match_shorthand    = opts.fetch(:match_shorthand, true)
       find_subsets   = opts.fetch(:subsets, false)
       find_duplicates   = opts.fetch(:duplicates, false)
       rule_sets = Parser::Css.parse(@raw_css)
