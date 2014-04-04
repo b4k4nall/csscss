@@ -10,8 +10,9 @@ module Csscss
       @ignored_selectors  = []
       @match_shorthand    = true
       @ignore_sass_mixins = false
-      @find_duplicates    = false
-      @subsets       = false
+      @duplicates         = false
+      @subsets            = false
+      @empty_selectors    = false
     end
 
     def run
@@ -45,14 +46,15 @@ module Csscss
           ignored_properties: @ignored_properties,
           ignored_selectors:  @ignored_selectors,
           match_shorthand:    @match_shorthand,
-          duplicates:         @find_duplicates,
-          subsets:            @subsets
+          duplicates:         @duplicates,
+          subsets:            @subsets,
+          empty_selectors:    @empty_selectors
         )
 
         if @json
           puts JSONReporter.new(redundancies).report
         else
-          report = Reporter.new(redundancies).report(verbose:@verbose, color:@color, duplicates: analyzer.duplicates, subsets:analyzer.subsets)
+          report = Reporter.new(redundancies).report(verbose:@verbose, color:@color, duplicates: analyzer.duplicates, subsets:analyzer.subsets, empty_selectors: analyzer.empty_selectors)
           puts report unless report.empty?
         end
       end
@@ -83,7 +85,10 @@ module Csscss
 
         opts.on("-s", "--[no-]subsets", "Display all selector subsets") do |s|
           @subsets = s
+        end
 
+        opts.on("-empty", "--[no-]empty selectors", "Display all empty selectors") do |e|
+          @empty_selectors = e
         end
 
         opts.on("--[no-]color", "Colorize output", "(default is #{@color})") do |c|

@@ -10,14 +10,19 @@ module Csscss
       ignored_properties = opts[:ignored_properties] || []
       ignored_selectors  = opts[:ignored_selectors] || []
       match_shorthand    = opts.fetch(:match_shorthand, true)
-      find_subsets   = opts.fetch(:subsets, false)
-      find_duplicates   = opts.fetch(:duplicates, false)
+      find_subsets       = opts.fetch(:subsets, false)
+      find_duplicates    = opts.fetch(:duplicates, false)
+      find_empty         = opts.fetch(:empty_selectors, false)
+
       rule_sets = Parser::Css.parse(@raw_css)
       matches = {}
       parents = {}
+      @empty_selectors = [] if find_empty
+
       rule_sets.each do |rule_set|
         next if ignored_selectors.include?(rule_set.selectors.selectors)
         sel = rule_set.selectors
+        @empty_selectors << sel if find_empty && rule_set.declarations.empty?
 
         rule_set.declarations.each do |dec|
           next if ignored_properties.include?(dec.property)
@@ -56,7 +61,9 @@ module Csscss
         end
       end
 
-      @duplicates, @subsets = find_all_duplicates_and_subsets(matches, find_subsets) if (find_duplicates || find_subsets) && matches
+      duplicates, subsets = find_all_duplicates_and_subsets(matches, find_subsets) if (find_duplicates || find_subsets) && matches
+      @duplicates = duplicates if find_duplicates
+      @subsets = subsets if find_subsets
 
       inverted_matches = {}
       matches.each do |declaration, selector_groups|
@@ -122,11 +129,15 @@ module Csscss
       end
     end
 
-    def duplicates(opts = {})
+    def empty_selectors
+      @empty_selectors
+    end
+
+    def duplicates
       @duplicates
     end
 
-    def subsets(opts = {})
+    def subsets
       @subsets
     end
 
