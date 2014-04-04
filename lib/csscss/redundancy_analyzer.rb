@@ -123,12 +123,10 @@ module Csscss
     end
 
     def duplicates(opts = {})
-      redundancies(opts) unless @duplicates
       @duplicates
     end
 
     def subsets(opts = {})
-      redundancies(opts) unless @subsets
       @subsets
     end
 

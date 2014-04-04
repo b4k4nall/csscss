@@ -7,8 +7,8 @@ module Csscss
     def report(options = {})
       verbose      = options.fetch(:verbose, false)
       should_color = options.fetch(:color, true)
-      duplicates = options.fetch(:duplicates, [])
-      subsets = options.fetch(:subsets, [])
+      duplicates = options.fetch(:duplicates, []) || []
+      subsets = options.fetch(:subsets, []) || []
 
       io = StringIO.new
       @redundancies.each do |selector_groups, declarations|
